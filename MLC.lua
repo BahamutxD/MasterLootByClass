@@ -79,16 +79,17 @@ local function GetMLID(name)
     return nil
 end
 
+local function GiveToRandom()
+  local item = LootFrame.selectedSlot
+  local max = GetNumRaidMembers()
+  local id = math.random(1, max)
+  GiveMasterLoot(item, id);
+end
+
 local function GiveLoot(name)
   local li = LootFrame.selectedSlot
   local ci = GetMLID(name)
   GiveMasterLoot(li, ci);
-end
-
-local function CloseMenu()
-  if getglobal('RaidDropDown'):IsVisible() then
-    ToggleDropDownMenu(1, nil, getglobal('RaidDropDown'), "cursor", 0, 0)
-  end
 end
 
 function BuildRaidMenu()
@@ -174,6 +175,19 @@ function BuildRaidMenu()
           ['key'] = 'shaman'
       }
       UIDropDownMenu_AddButton(Shamans, UIDROPDOWNMENU_MENU_LEVEL);
+      
+      local separator = {};
+      separator.text = ""
+      separator.disabled = true
+      UIDropDownMenu_AddButton(separator);
+
+      local random = {};
+      random.text = "Random"
+      random.disabled = false
+      random.isTitle = false
+      random.notCheckable = true
+      random.func = GiveToRandom
+      UIDropDownMenu_AddButton(random, UIDROPDOWNMENU_MENU_LEVEL);    
 
   end
   if UIDROPDOWNMENU_MENU_LEVEL == 2 then
@@ -201,12 +215,9 @@ MLC:SetScript("OnEvent", function()
       if event == "OPEN_MASTER_LOOT_LIST" and UnitInRaid("player") then
         UIDropDownMenu_Initialize(RaidDropDown, BuildRaidMenu, "MENU");
         ToggleDropDownMenu(1, nil, RaidDropDown, "cursor", 0, 0)
-        if event == "LOOT_BIND_CONFIRM" then
-          StaticPopup1Button1:Click()
-        end
-        if event == "LOOT_SLOT_CLEARED" then
-          CloseMenu()
-        end
+      end
+      if event == "LOOT_SLOT_CLEARED" and UnitInRaid("player") then
+        CloseDropDownMenus()
       end
   end
 end)

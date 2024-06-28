@@ -1,0 +1,6 @@
+## Interface: 11200
+## Title: ClassColorMasterLoot
+## Author: Spit
+## Version: 1.0.0.0
+## Notes: Master loot window sorted by class
+MLC.lua

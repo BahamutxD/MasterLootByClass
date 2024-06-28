@@ -6,7 +6,6 @@ MLC:RegisterEvent("OPEN_MASTER_LOOT_LIST")
 MLC:RegisterEvent("UPDATE_MASTER_LOOT_LIST")
 MLC:RegisterEvent("RAID_ROSTER_UPDATE")
 MLC:RegisterEvent("LOOT_SLOT_CLEARED")
-MLC:RegisterEvent("LOOT_BIND_CONFIRM")
 
 MLC.raid = {
   ['warrior'] = {},

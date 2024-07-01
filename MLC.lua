@@ -79,9 +79,13 @@ local function GetMLID(name)
 end
 
 local function GiveToRandom()
+	local max = GetNumRaidMembers()
+	local name, id
+	while not name do
+		id = math.random(1, max)
+		name = GetMasterLootCandidate(id)
+	end
   local item = LootFrame.selectedSlot
-  local max = GetNumRaidMembers()
-  local id = math.random(1, max)
   GiveMasterLoot(item, id);
 end
 

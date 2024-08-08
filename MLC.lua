@@ -19,18 +19,6 @@ MLC.raid = {
   ['hunter'] = {},
 }
 
-MLC.classes = {
-  ['Warriors'] = 'warrior',
-  ['Paladins'] = 'paladin',
-  ['Druids'] = 'druid',
-  ['Warlocks'] = 'warlock',
-  ['Mages'] = 'mage',
-  ['Priests'] = 'priest',
-  ['Rogues'] = 'rogue',
-  ['Shamans'] = 'shaman',
-  ['Hunters'] = 'hunter',
-}
-
 MLC.classColors = {
   ["warrior"] = { r = 0.78, g = 0.61, b = 0.43, c = "|cffc79c6e" },
   ["mage"] = { r = 0.41, g = 0.8, b = 0.94, c = "|cff69ccf0" },
@@ -81,11 +69,15 @@ end
 local function GiveToRandom()
 	local max = GetNumRaidMembers()
 	local name, id
+  local item = LootFrame.selectedSlot
+  local link = GetLootSlotLink(item)
 	while not name do
 		id = math.random(1, max)
 		name = GetMasterLootCandidate(id)
 	end
-  local item = LootFrame.selectedSlot
+  if IsRaidLeader() or IsRaidOfficer() then
+    SendChatMessage("Random Rolling".." "..link, "RAID_WARNING")
+  end
   GiveMasterLoot(item, id);
 end
 

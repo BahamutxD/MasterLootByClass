@@ -77,6 +77,8 @@ local function GiveToRandom()
 	end
   if IsRaidLeader() or IsRaidOfficer() then
     SendChatMessage("Random Rolling".." "..link, "RAID_WARNING")
+  else 
+    SendChatMessage("Random Rolling".." "..link, "RAID")
   end
   GiveMasterLoot(item, id);
 end
@@ -110,7 +112,7 @@ local function BuildRaidMenu()
       local title = {};
       title.isTitle = true
       title.notCheckable = true
-      title.text = "Give Loot To"
+      title.text = "Give Loot To:"
       UIDropDownMenu_AddButton(title);
 
       local me = {};

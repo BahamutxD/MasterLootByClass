@@ -7,18 +7,6 @@ MLC:RegisterEvent("UPDATE_MASTER_LOOT_LIST")
 MLC:RegisterEvent("RAID_ROSTER_UPDATE")
 MLC:RegisterEvent("LOOT_SLOT_CLEARED")
 
-MLC.raid = {
-  ['warrior'] = {},
-  ['paladin'] = {},
-  ['druid'] = {},
-  ['warlock'] = {},
-  ['mage'] = {},
-  ['priest'] = {},
-  ['rogue'] = {},
-  ['shaman'] = {},
-  ['hunter'] = {},
-}
-
 MLC.classColors = {
   ["warrior"] = { r = 0.78, g = 0.61, b = 0.43, c = "|cffc79c6e" },
   ["mage"] = { r = 0.41, g = 0.8, b = 0.94, c = "|cff69ccf0" },
@@ -67,7 +55,7 @@ local function GetMLID(name)
 end
 
 local function GiveToRandom()
-	local max = GetNumRaidMembers()
+	local max = GetNumRaidMembers() > 0 and 40 or 5
 	local name, id
   local item = LootFrame.selectedSlot
   local link = GetLootSlotLink(item)
@@ -89,15 +77,6 @@ local function GiveLoot(name)
   GiveMasterLoot(item, id);
 end
 
-local function GiveToSelf()
-  local item = LootFrame.selectedSlot
-  for id = 1, GetNumRaidMembers() do
-    if (GetMasterLootCandidate(id) == UnitName("player")) then
-      GiveMasterLoot(item, id);
-    end
-   end
-end
-
 local function IsMasterLootOn()
   local method = GetLootMethod()
   if method == 'master' then
@@ -116,11 +95,13 @@ local function BuildRaidMenu()
       UIDropDownMenu_AddButton(title);
 
       local me = {};
+      local myname = UnitName("player")
       me.text = "Me"
       me.disabled = false
       me.isTitle = false
       me.notCheckable = true
-      me.func = GiveToSelf
+      me.func = GiveLoot
+      me.arg1 = myname
       UIDropDownMenu_AddButton(me, UIDROPDOWNMENU_MENU_LEVEL);
 
       local random = {};

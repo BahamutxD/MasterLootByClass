@@ -32,12 +32,13 @@ function MLC.fillRaidData()
       ['hunter'] = {},
   }
   if UnitInRaid("player") then
-    for i = 0, GetNumRaidMembers() do
+    for i = 1, GetNumRaidMembers() do
       if GetRaidRosterInfo(i) then
           local name, _, _, _, _, _, z = GetRaidRosterInfo(i);
           local _, unitClass = UnitClass('raid' .. i)
           unitClass = string.lower(unitClass)
           table.insert(MLC.raid[unitClass], name)
+          table.sort(MLC.raid[unitClass])
       end
     end
   end
@@ -54,6 +55,18 @@ local function GetMLID(name)
     return nil
 end
 
+function MLC.IsOffline(name)
+  for i = 1, GetNumRaidMembers() do
+      if (GetRaidRosterInfo(i)) then
+          local n, _, _, _, _, _, o = GetRaidRosterInfo(i);
+          if n == name and o == 'Offline' then
+              return true
+          end
+      end
+  end
+  return false
+end
+
 local function GiveToRandom()
 	local max = GetNumRaidMembers() > 0 and 40 or 5
 	local name, id
@@ -63,12 +76,11 @@ local function GiveToRandom()
 		id = math.random(1, max)
 		name = GetMasterLootCandidate(id)
 	end
-  if IsRaidLeader() or IsRaidOfficer() then
-    SendChatMessage("Random Rolling".." "..link, "RAID_WARNING")
-  else 
-    SendChatMessage("Random Rolling".." "..link, "RAID")
+  if name and id and item and link and max > 0 then
+    SendChatMessage("Rolling the dice...", "RAID") 
+    GiveMasterLoot(item, id);
+    SendChatMessage(name.." wins "..link.."!", "RAID")
   end
-  GiveMasterLoot(item, id);
 end
 
 local function GiveLoot(name)
@@ -83,6 +95,20 @@ local function IsMasterLootOn()
     return true
   end
   return false
+end
+
+local function LinkItems()
+  local message = ""
+  for i=1, GetNumLootItems() do
+    local item = GetLootSlotLink(i)
+    local _, _, _, quality = GetLootSlotInfo(i)
+    if quality > 2 then message = message..item end
+  end
+  if IsRaidLeader() or IsRaidOfficer() then
+    SendChatMessage(message, "RAID_WARNING")
+  else
+    SendChatMessage(message, "RAID")
+  end
 end
 
 local function BuildRaidMenu()
@@ -111,7 +137,7 @@ local function BuildRaidMenu()
       random.notCheckable = true
       random.func = GiveToRandom
       UIDropDownMenu_AddButton(random, UIDROPDOWNMENU_MENU_LEVEL);  
-
+      
       local separator = {};
       separator.text = ""
       separator.disabled = true
@@ -215,17 +241,35 @@ local function BuildRaidMenu()
       if next(MLC.raid['shaman']) ~= nil then
         UIDropDownMenu_AddButton(Shamans, UIDROPDOWNMENU_MENU_LEVEL);
       end
+      local separator = {};
+      separator.text = ""
+      separator.disabled = true
+      UIDropDownMenu_AddButton(separator);
+
+      local linkitems = {};
+      linkitems.text = "Link Items"
+      linkitems.disabled = false
+      linkitems.isTitle = false
+      linkitems.notCheckable = true
+      linkitems.func = LinkItems
+      UIDropDownMenu_AddButton(linkitems, UIDROPDOWNMENU_MENU_LEVEL);
   end
   if UIDROPDOWNMENU_MENU_LEVEL == 2 then
 
       for i, player in next, MLC.raid[UIDROPDOWNMENU_MENU_VALUE['key']] do
           local Players = {}
           local color = MLC.classColors[UIDROPDOWNMENU_MENU_VALUE['key']].c
-          Players.text = color .. player
           Players.notCheckable = false
           Players.hasArrow = false
           Players.func = GiveLoot
           Players.arg1 = player
+          if MLC.IsOffline(player) then
+            Players.disabled = true
+            Players.text = player
+          else
+            Players.disabled = false
+            Players.text = color..player
+          end
           UIDropDownMenu_AddButton(Players, UIDROPDOWNMENU_MENU_LEVEL);
       end
   end

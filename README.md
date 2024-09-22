@@ -1,6 +1,7 @@
-# MasterLootByClass (MLC)
-Sorts master loot window by class
-
+# MasterLootByClass
+Sorts master loot window by class.
+Have additional buttons for assigning loot to yourself or a random raid member.
+Currently only works in raids.
 
 
 

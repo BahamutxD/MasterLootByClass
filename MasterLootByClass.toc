@@ -1,0 +1,6 @@
+## Interface: 11200
+## Title: MasterLootByClass
+## Author: Spit
+## Version: 1.1
+## Notes: Master loot window sorted by class
+MasterLootByClass.lua

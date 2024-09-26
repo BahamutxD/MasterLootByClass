@@ -1,6 +1,6 @@
 ## Interface: 11200
-## Title: MasterLootByClass
-## Author: Spit
-## Version: 1.1
-## Notes: Master loot window sorted by class
+## Title: MasterLootByClass |cffc79c6e-Spit-|r
+## Author: Otari98
+## Version: 1.2
+## Notes: Replacement of the default master loot dropdown menu
 MasterLootByClass.lua

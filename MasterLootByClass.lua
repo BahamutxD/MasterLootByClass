@@ -1,13 +1,14 @@
-local MLC = CreateFrame("Frame")
+--Most of this code taken from https://github.com/CosminPOP/TWAssignments and https://github.com/Ko0z/XLoot
+--Main idea - keep it simple, no fancy functions
+local MLBC = CreateFrame("Frame")
 local RaidDropDown = CreateFrame('Frame', 'RaidDropDown', UIParent, 'UIDropDownMenuTemplate')
 
-MLC:RegisterEvent("ADDON_LOADED")
-MLC:RegisterEvent("OPEN_MASTER_LOOT_LIST")
-MLC:RegisterEvent("UPDATE_MASTER_LOOT_LIST")
-MLC:RegisterEvent("RAID_ROSTER_UPDATE")
-MLC:RegisterEvent("LOOT_SLOT_CLEARED")
+MLBC:RegisterEvent("OPEN_MASTER_LOOT_LIST")
+MLBC:RegisterEvent("UPDATE_MASTER_LOOT_LIST")
+MLBC:RegisterEvent("RAID_ROSTER_UPDATE")
+MLBC:RegisterEvent("LOOT_SLOT_CLEARED")
 
-MLC.classColors = {
+MLBC.classColors = {
   ["warrior"] = { r = 0.78, g = 0.61, b = 0.43, c = "|cffc79c6e" },
   ["mage"] = { r = 0.41, g = 0.8, b = 0.94, c = "|cff69ccf0" },
   ["rogue"] = { r = 1, g = 0.96, b = 0.41, c = "|cfffff569" },
@@ -19,8 +20,8 @@ MLC.classColors = {
   ["paladin"] = { r = 0.96, g = 0.55, b = 0.73, c = "|cfff58cba" },
 }
 
-function MLC.fillRaidData()
-  MLC.raid = {
+function MLBC.fillRaidData()
+  MLBC.raid = {
       ['warrior'] = {},
       ['paladin'] = {},
       ['druid'] = {},
@@ -37,8 +38,8 @@ function MLC.fillRaidData()
           local name, _, _, _, _, _, z = GetRaidRosterInfo(i);
           local _, unitClass = UnitClass('raid' .. i)
           unitClass = string.lower(unitClass)
-          table.insert(MLC.raid[unitClass], name)
-          table.sort(MLC.raid[unitClass])
+          table.insert(MLBC.raid[unitClass], name)
+          table.sort(MLBC.raid[unitClass])
       end
     end
   end
@@ -46,7 +47,7 @@ end
 
 local function GetMLID(name)
   if GetNumRaidMembers() > 0 then
-    for i = 1, 40 do
+    for i = 1, GetNumRaidMembers() do
       if GetMasterLootCandidate(i) == name then
         return i
       end
@@ -55,7 +56,7 @@ local function GetMLID(name)
     return nil
 end
 
-function MLC.IsOffline(name)
+local function IsOffline(name)
   for i = 1, GetNumRaidMembers() do
       if (GetRaidRosterInfo(i)) then
           local n, _, _, _, _, _, o = GetRaidRosterInfo(i);
@@ -68,7 +69,7 @@ function MLC.IsOffline(name)
 end
 
 local function GiveToRandom()
-	local max = GetNumRaidMembers() > 0 and 40 or 5
+	local max = GetNumRaidMembers()
 	local name, id
   local item = LootFrame.selectedSlot
   local link = GetLootSlotLink(item)
@@ -78,37 +79,16 @@ local function GiveToRandom()
 	end
   if name and id and item and link and max > 0 then
     SendChatMessage("Rolling the dice...", "RAID") 
-    GiveMasterLoot(item, id);
     SendChatMessage(name.." wins "..link.."!", "RAID")
+    GiveMasterLoot(item, id);
   end
 end
 
 local function GiveLoot(name)
   local item = LootFrame.selectedSlot
   local id = GetMLID(name)
+  if not item or not id or not name then return end
   GiveMasterLoot(item, id);
-end
-
-local function IsMasterLootOn()
-  local method = GetLootMethod()
-  if method == 'master' then
-    return true
-  end
-  return false
-end
-
-local function LinkItems()
-  local message = ""
-  for i=1, GetNumLootItems() do
-    local item = GetLootSlotLink(i)
-    local _, _, _, quality = GetLootSlotInfo(i)
-    if quality > 2 then message = message..item end
-  end
-  if IsRaidLeader() or IsRaidOfficer() then
-    SendChatMessage(message, "RAID_WARNING")
-  else
-    SendChatMessage(message, "RAID")
-  end
 end
 
 local function BuildRaidMenu()
@@ -144,126 +124,114 @@ local function BuildRaidMenu()
       UIDropDownMenu_AddButton(separator);
 
       local Warriors = {}
-      Warriors.text = MLC.classColors['warrior'].c .. 'Warriors'
+      Warriors.text = MLBC.classColors['warrior'].c .. 'Warriors'
       Warriors.notCheckable = true
       Warriors.hasArrow = true
       Warriors.value = {
           ['key'] = 'warrior'
       }
-      if next(MLC.raid['warrior']) ~= nil then
+      if next(MLBC.raid['warrior']) ~= nil then
         UIDropDownMenu_AddButton(Warriors, UIDROPDOWNMENU_MENU_LEVEL);
       end
 
       local Druids = {}
-      Druids.text = MLC.classColors['druid'].c .. 'Druids'
+      Druids.text = MLBC.classColors['druid'].c .. 'Druids'
       Druids.notCheckable = true
       Druids.hasArrow = true
       Druids.value = {
           ['key'] = 'druid'
       }
-      if next(MLC.raid['druid']) ~= nil then
+      if next(MLBC.raid['druid']) ~= nil then
         UIDropDownMenu_AddButton(Druids, UIDROPDOWNMENU_MENU_LEVEL);
       end
 
       local Paladins = {}
-      Paladins.text = MLC.classColors['paladin'].c .. 'Paladins'
+      Paladins.text = MLBC.classColors['paladin'].c .. 'Paladins'
       Paladins.notCheckable = true
       Paladins.hasArrow = true
       Paladins.value = {
           ['key'] = 'paladin'
       }
-      if next(MLC.raid['paladin']) ~= nil then
+      if next(MLBC.raid['paladin']) ~= nil then
         UIDropDownMenu_AddButton(Paladins, UIDROPDOWNMENU_MENU_LEVEL);
       end
 
       local Warlocks = {}
-      Warlocks.text = MLC.classColors['warlock'].c .. 'Warlocks'
+      Warlocks.text = MLBC.classColors['warlock'].c .. 'Warlocks'
       Warlocks.notCheckable = true
       Warlocks.hasArrow = true
       Warlocks.value = {
           ['key'] = 'warlock'
       }
-      if next(MLC.raid['warlock']) ~= nil then
+      if next(MLBC.raid['warlock']) ~= nil then
         UIDropDownMenu_AddButton(Warlocks, UIDROPDOWNMENU_MENU_LEVEL);
       end
 
       local Mages = {}
-      Mages.text = MLC.classColors['mage'].c .. 'Mages'
+      Mages.text = MLBC.classColors['mage'].c .. 'Mages'
       Mages.notCheckable = true
       Mages.hasArrow = true
       Mages.value = {
           ['key'] = 'mage'
       }
-      if next(MLC.raid['mage']) ~= nil then
+      if next(MLBC.raid['mage']) ~= nil then
         UIDropDownMenu_AddButton(Mages, UIDROPDOWNMENU_MENU_LEVEL);
       end
 
       local Priests = {}
-      Priests.text = MLC.classColors['priest'].c .. 'Priests'
+      Priests.text = MLBC.classColors['priest'].c .. 'Priests'
       Priests.notCheckable = true
       Priests.hasArrow = true
       Priests.value = {
           ['key'] = 'priest'
       }
-      if next(MLC.raid['priest']) ~= nil then
+      if next(MLBC.raid['priest']) ~= nil then
         UIDropDownMenu_AddButton(Priests, UIDROPDOWNMENU_MENU_LEVEL);
       end
 
       local Rogues = {}
-      Rogues.text = MLC.classColors['rogue'].c .. 'Rogues'
+      Rogues.text = MLBC.classColors['rogue'].c .. 'Rogues'
       Rogues.notCheckable = true
       Rogues.hasArrow = true
       Rogues.value = {
           ['key'] = 'rogue'
       }
-      if next(MLC.raid['rogue']) ~= nil then
+      if next(MLBC.raid['rogue']) ~= nil then
         UIDropDownMenu_AddButton(Rogues, UIDROPDOWNMENU_MENU_LEVEL);
       end
 
       local Hunters = {}
-      Hunters.text = MLC.classColors['hunter'].c .. 'Hunters'
+      Hunters.text = MLBC.classColors['hunter'].c .. 'Hunters'
       Hunters.notCheckable = true
       Hunters.hasArrow = true
       Hunters.value = {
           ['key'] = 'hunter'
       }
-      if next(MLC.raid['hunter']) ~= nil then
+      if next(MLBC.raid['hunter']) ~= nil then
         UIDropDownMenu_AddButton(Hunters, UIDROPDOWNMENU_MENU_LEVEL);
       end
 
       local Shamans = {}
-      Shamans.text = MLC.classColors['shaman'].c .. 'Shamans'
+      Shamans.text = MLBC.classColors['shaman'].c .. 'Shamans'
       Shamans.notCheckable = true
       Shamans.hasArrow = true
       Shamans.value = {
           ['key'] = 'shaman'
       }
-      if next(MLC.raid['shaman']) ~= nil then
+      if next(MLBC.raid['shaman']) ~= nil then
         UIDropDownMenu_AddButton(Shamans, UIDROPDOWNMENU_MENU_LEVEL);
       end
-      local separator = {};
-      separator.text = ""
-      separator.disabled = true
-      UIDropDownMenu_AddButton(separator);
-
-      local linkitems = {};
-      linkitems.text = "Link Items"
-      linkitems.disabled = false
-      linkitems.isTitle = false
-      linkitems.notCheckable = true
-      linkitems.func = LinkItems
-      UIDropDownMenu_AddButton(linkitems, UIDROPDOWNMENU_MENU_LEVEL);
   end
   if UIDROPDOWNMENU_MENU_LEVEL == 2 then
 
-      for i, player in next, MLC.raid[UIDROPDOWNMENU_MENU_VALUE['key']] do
+      for i, player in next, MLBC.raid[UIDROPDOWNMENU_MENU_VALUE['key']] do
           local Players = {}
-          local color = MLC.classColors[UIDROPDOWNMENU_MENU_VALUE['key']].c
+          local color = MLBC.classColors[UIDROPDOWNMENU_MENU_VALUE['key']].c
           Players.notCheckable = false
           Players.hasArrow = false
           Players.func = GiveLoot
           Players.arg1 = player
-          if MLC.IsOffline(player) then
+          if IsOffline(player) or not GetMLID(player) then
             Players.disabled = true
             Players.text = player
           else
@@ -275,18 +243,14 @@ local function BuildRaidMenu()
   end
 end
 
-MLC:SetScript("OnEvent", function()
+MLBC:SetScript("OnEvent", function()
   if event then
-    if event == "ADDON_LOADED" and arg1 == "MLC" then
-      DEFAULT_CHAT_FRAME:AddMessage("<MLC> loaded")
-      MLC.fillRaidData()
-    end
-    if IsMasterLootOn() and UnitInRaid("player") then
-      if event == "RAID_ROSTER_UPDATE" or event == "UPDATE_MASTER_LOOT_LIST" then
-          MLC.fillRaidData()
+    if GetLootMethod() == "master" and UnitInRaid("player") then
+      if event == "RAID_ROSTER_UPDATE" or event == "UPDATE_MASTER_LOOT_LIST" then --i dont think "UPDATE_MASTER_LOOT_LIST" ever fires but leave it here just in case
+          MLBC.fillRaidData()
       end
       if event == "OPEN_MASTER_LOOT_LIST" then
-        MLC.fillRaidData();
+        MLBC.fillRaidData();
         UIDropDownMenu_Initialize(RaidDropDown, BuildRaidMenu, "MENU");
         ToggleDropDownMenu(1, nil, RaidDropDown, "cursor", 0, 0)
       end

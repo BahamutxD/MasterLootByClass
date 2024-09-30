@@ -231,13 +231,12 @@ local function BuildRaidMenu()
           Players.hasArrow = false
           Players.func = GiveLoot
           Players.arg1 = player
-          if IsOffline(player) or not GetMLID(player) then
+          if IsOffline(player) then
             Players.disabled = true
-            Players.text = player
           else
             Players.disabled = false
-            Players.text = color..player
           end
+          Players.text = color..player
           UIDropDownMenu_AddButton(Players, UIDROPDOWNMENU_MENU_LEVEL);
       end
   end

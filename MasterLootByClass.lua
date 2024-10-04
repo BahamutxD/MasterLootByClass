@@ -233,10 +233,11 @@ local function BuildRaidMenu()
           Players.arg1 = player
           if IsOffline(player) then
             Players.disabled = true
+            Players.text = player
           else
+            Players.text = color..player
             Players.disabled = false
           end
-          Players.text = color..player
           UIDropDownMenu_AddButton(Players, UIDROPDOWNMENU_MENU_LEVEL);
       end
   end

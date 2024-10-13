@@ -2,6 +2,7 @@
 --Main idea - keep it simple, no fancy functions
 local MLBC = CreateFrame("Frame")
 local RaidDropDown = CreateFrame('Frame', 'RaidDropDown', UIParent, 'UIDropDownMenuTemplate')
+LootFrame:SetScript("OnMouseUp", CloseDropDownMenus)
 
 MLBC:RegisterEvent("OPEN_MASTER_LOOT_LIST")
 MLBC:RegisterEvent("UPDATE_MASTER_LOOT_LIST")
@@ -35,7 +36,7 @@ function MLBC.fillRaidData()
   if UnitInRaid("player") then
     for i = 1, GetNumRaidMembers() do
       if GetRaidRosterInfo(i) then
-          local name, _, _, _, _, _, z = GetRaidRosterInfo(i);
+          local name = GetRaidRosterInfo(i);
           local _, unitClass = UnitClass('raid' .. i)
           unitClass = string.lower(unitClass)
           table.insert(MLBC.raid[unitClass], name)
@@ -47,13 +48,14 @@ end
 
 local function GetMLID(name)
   if GetNumRaidMembers() > 0 then
-    for i = 1, GetNumRaidMembers() do
-      if GetMasterLootCandidate(i) == name then
+    for i = 1, 40 do
+      if name == GetMasterLootCandidate(i) then
         return i
       end
     end
   end
-    return nil
+  DEFAULT_CHAT_FRAME:AddMessage("|cffcc6666[MasterLootByClass]|r|cffffff00 "..name.." can not receive this item.|r")
+  return nil
 end
 
 local function IsOffline(name)
@@ -69,7 +71,7 @@ local function IsOffline(name)
 end
 
 local function GiveToRandom()
-	local max = GetNumRaidMembers()
+	local max = GetNumRaidMembers() and 40 or 5
 	local name, id
   local item = LootFrame.selectedSlot
   local link = GetLootSlotLink(item)
@@ -87,7 +89,7 @@ end
 local function GiveLoot(name)
   local item = LootFrame.selectedSlot
   local id = GetMLID(name)
-  if not item or not id or not name then return end
+  if not item or not id then return end
   GiveMasterLoot(item, id);
 end
 
@@ -96,6 +98,7 @@ local function BuildRaidMenu()
   if UIDROPDOWNMENU_MENU_LEVEL == 1 then
       local title = {};
       title.isTitle = true
+      title.textHeight = 12
       title.notCheckable = true
       title.text = "Give Loot To:"
       UIDropDownMenu_AddButton(title);
@@ -103,6 +106,7 @@ local function BuildRaidMenu()
       local me = {};
       local myname = UnitName("player")
       me.text = "Me"
+      me.textHeight = 12
       me.disabled = false
       me.isTitle = false
       me.notCheckable = true
@@ -113,6 +117,7 @@ local function BuildRaidMenu()
       local random = {};
       random.text = "Random"
       random.disabled = false
+      random.textHeight = 12
       random.isTitle = false
       random.notCheckable = true
       random.func = GiveToRandom
@@ -125,6 +130,7 @@ local function BuildRaidMenu()
 
       local Warriors = {}
       Warriors.text = MLBC.classColors['warrior'].c .. 'Warriors'
+      Warriors.textHeight = 12
       Warriors.notCheckable = true
       Warriors.hasArrow = true
       Warriors.value = {
@@ -136,6 +142,7 @@ local function BuildRaidMenu()
 
       local Druids = {}
       Druids.text = MLBC.classColors['druid'].c .. 'Druids'
+      Druids.textHeight = 12
       Druids.notCheckable = true
       Druids.hasArrow = true
       Druids.value = {
@@ -147,6 +154,7 @@ local function BuildRaidMenu()
 
       local Paladins = {}
       Paladins.text = MLBC.classColors['paladin'].c .. 'Paladins'
+      Paladins.textHeight = 12
       Paladins.notCheckable = true
       Paladins.hasArrow = true
       Paladins.value = {
@@ -158,6 +166,7 @@ local function BuildRaidMenu()
 
       local Warlocks = {}
       Warlocks.text = MLBC.classColors['warlock'].c .. 'Warlocks'
+      Warlocks.textHeight = 12
       Warlocks.notCheckable = true
       Warlocks.hasArrow = true
       Warlocks.value = {
@@ -169,6 +178,7 @@ local function BuildRaidMenu()
 
       local Mages = {}
       Mages.text = MLBC.classColors['mage'].c .. 'Mages'
+      Mages.textHeight = 12
       Mages.notCheckable = true
       Mages.hasArrow = true
       Mages.value = {
@@ -180,6 +190,7 @@ local function BuildRaidMenu()
 
       local Priests = {}
       Priests.text = MLBC.classColors['priest'].c .. 'Priests'
+      Priests.textHeight = 12
       Priests.notCheckable = true
       Priests.hasArrow = true
       Priests.value = {
@@ -191,6 +202,7 @@ local function BuildRaidMenu()
 
       local Rogues = {}
       Rogues.text = MLBC.classColors['rogue'].c .. 'Rogues'
+      Rogues.textHeight = 12
       Rogues.notCheckable = true
       Rogues.hasArrow = true
       Rogues.value = {
@@ -202,6 +214,7 @@ local function BuildRaidMenu()
 
       local Hunters = {}
       Hunters.text = MLBC.classColors['hunter'].c .. 'Hunters'
+      Hunters.textHeight = 12
       Hunters.notCheckable = true
       Hunters.hasArrow = true
       Hunters.value = {
@@ -213,6 +226,7 @@ local function BuildRaidMenu()
 
       local Shamans = {}
       Shamans.text = MLBC.classColors['shaman'].c .. 'Shamans'
+      Shamans.textHeight = 12
       Shamans.notCheckable = true
       Shamans.hasArrow = true
       Shamans.value = {
@@ -227,10 +241,11 @@ local function BuildRaidMenu()
       for i, player in next, MLBC.raid[UIDROPDOWNMENU_MENU_VALUE['key']] do
           local Players = {}
           local color = MLBC.classColors[UIDROPDOWNMENU_MENU_VALUE['key']].c
-          Players.notCheckable = false
+          Players.notCheckable = true
           Players.hasArrow = false
           Players.func = GiveLoot
           Players.arg1 = player
+          Players.textHeight = 12
           if IsOffline(player) then
             Players.disabled = true
             Players.text = player
@@ -240,6 +255,7 @@ local function BuildRaidMenu()
           end
           UIDropDownMenu_AddButton(Players, UIDROPDOWNMENU_MENU_LEVEL);
       end
+    return
   end
 end
 
@@ -252,7 +268,7 @@ MLBC:SetScript("OnEvent", function()
       if event == "OPEN_MASTER_LOOT_LIST" then
         MLBC.fillRaidData();
         UIDropDownMenu_Initialize(RaidDropDown, BuildRaidMenu, "MENU");
-        ToggleDropDownMenu(1, nil, RaidDropDown, "cursor", 0, 0)
+        ToggleDropDownMenu(1, nil, RaidDropDown, LootFrame.selectedLootButton, 0, 0)
       end
       if event == "LOOT_SLOT_CLEARED" then
         CloseDropDownMenus()

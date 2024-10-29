@@ -3,9 +3,9 @@
 local MLBC = CreateFrame("Frame")
 local RaidDropDown = CreateFrame('Frame', 'RaidDropDown', UIParent, 'UIDropDownMenuTemplate')
 LootFrame:SetScript("OnMouseUp", CloseDropDownMenus)
+LootFrame:UnregisterEvent("OPEN_MASTER_LOOT_LIST")
 
 MLBC:RegisterEvent("OPEN_MASTER_LOOT_LIST")
-MLBC:RegisterEvent("UPDATE_MASTER_LOOT_LIST")
 MLBC:RegisterEvent("RAID_ROSTER_UPDATE")
 MLBC:RegisterEvent("LOOT_SLOT_CLEARED")
 
@@ -41,6 +41,21 @@ function MLBC.fillRaidData()
           unitClass = string.lower(unitClass)
           table.insert(MLBC.raid[unitClass], name)
           table.sort(MLBC.raid[unitClass])
+      end
+    end
+  end
+  if UnitInParty("player") and not UnitInRaid("player") then
+    local _, playerClass = UnitClass("player")
+    local playerName = UnitName("player")
+    playerClass = string.lower(playerClass)
+    table.insert(MLBC.raid[playerClass], playerName)
+    for i = 1, GetNumPartyMembers() do
+      if UnitName('party' .. i) then
+        local name = UnitName('party' .. i)
+        local _, unitClass = UnitClass('party' .. i)
+        unitClass = string.lower(unitClass)
+        table.insert(MLBC.raid[unitClass], name)
+        table.sort(MLBC.raid[unitClass])
       end
     end
   end
@@ -95,7 +110,7 @@ end
 
 local function BuildRaidMenu()
 
-  if UIDROPDOWNMENU_MENU_LEVEL == 1 then
+  if UnitInRaid("player") and UIDROPDOWNMENU_MENU_LEVEL == 1 then
       local title = {};
       title.isTitle = true
       title.textHeight = 12
@@ -235,6 +250,31 @@ local function BuildRaidMenu()
       if next(MLBC.raid['shaman']) ~= nil then
         UIDropDownMenu_AddButton(Shamans, UIDROPDOWNMENU_MENU_LEVEL);
       end
+    elseif UnitInParty("player") and not UnitInRaid("player") and UIDROPDOWNMENU_MENU_LEVEL == 1 then
+      local info, candidate, class
+      for i = 1, MAX_PARTY_MEMBERS + 1, 1 do
+        candidate = GetMasterLootCandidate(i);
+        if candidate then
+          for k,v in pairs(MLBC.raid) do
+            for k2,v2 in pairs(MLBC.raid[k]) do
+              if v2 == candidate then
+                class = k
+              end
+            end
+          end
+          if class then
+            local color = MLBC.classColors[class].c
+            info = {}
+            info.text = color .. candidate
+            info.textHeight = 12
+            info.notCheckable = 1
+            info.arg1 = LootFrame.selectedSlot
+            info.arg2 = i
+            info.func = GiveMasterLoot
+            UIDropDownMenu_AddButton(info)
+          end
+        end
+      end
   end
   if UIDROPDOWNMENU_MENU_LEVEL == 2 then
 
@@ -261,8 +301,8 @@ end
 
 MLBC:SetScript("OnEvent", function()
   if event then
-    if GetLootMethod() == "master" and UnitInRaid("player") then
-      if event == "RAID_ROSTER_UPDATE" or event == "UPDATE_MASTER_LOOT_LIST" then --i dont think "UPDATE_MASTER_LOOT_LIST" ever fires but leave it here just in case
+    if GetLootMethod() == "master" then
+      if event == "RAID_ROSTER_UPDATE" then
           MLBC.fillRaidData()
       end
       if event == "OPEN_MASTER_LOOT_LIST" then

@@ -21,18 +21,25 @@ MLBC.classColors = {
   ["paladin"] = { r = 0.96, g = 0.55, b = 0.73, c = "|cfff58cba" },
 }
 
+MLBC.raid = {
+  ['warrior'] = {},
+  ['paladin'] = {},
+  ['druid'] = {},
+  ['warlock'] = {},
+  ['mage'] = {},
+  ['priest'] = {},
+  ['rogue'] = {},
+  ['shaman'] = {},
+  ['hunter'] = {},
+}
+
 function MLBC.fillRaidData()
-  MLBC.raid = {
-      ['warrior'] = {},
-      ['paladin'] = {},
-      ['druid'] = {},
-      ['warlock'] = {},
-      ['mage'] = {},
-      ['priest'] = {},
-      ['rogue'] = {},
-      ['shaman'] = {},
-      ['hunter'] = {},
-  }
+  for _, data in pairs(MLBC.raid) do
+    for index in pairs(data) do
+      data[index] = nil
+    end
+    table.setn(data, 0)
+  end
   if UnitInRaid("player") then
     for i = 1, GetNumRaidMembers() do
       if GetRaidRosterInfo(i) then
@@ -40,7 +47,6 @@ function MLBC.fillRaidData()
           local _, unitClass = UnitClass('raid' .. i)
           unitClass = string.lower(unitClass)
           table.insert(MLBC.raid[unitClass], name)
-          table.sort(MLBC.raid[unitClass])
       end
     end
   end
@@ -55,9 +61,11 @@ function MLBC.fillRaidData()
         local _, unitClass = UnitClass('party' .. i)
         unitClass = string.lower(unitClass)
         table.insert(MLBC.raid[unitClass], name)
-        table.sort(MLBC.raid[unitClass])
       end
     end
+  end
+  for class in pairs(MLBC.raid) do
+    table.sort(MLBC.raid[class])
   end
 end
 
@@ -300,19 +308,32 @@ local function BuildRaidMenu()
 end
 
 MLBC:SetScript("OnEvent", function()
-  if event then
-    if GetLootMethod() == "master" then
-      if event == "RAID_ROSTER_UPDATE" then
-          MLBC.fillRaidData()
-      end
-      if event == "OPEN_MASTER_LOOT_LIST" then
-        MLBC.fillRaidData();
-        UIDropDownMenu_Initialize(RaidDropDown, BuildRaidMenu, "MENU");
-        ToggleDropDownMenu(1, nil, RaidDropDown, LootFrame.selectedLootButton, 0, 0)
-      end
-      if event == "LOOT_SLOT_CLEARED" then
-        CloseDropDownMenus()
-      end
+  if GetLootMethod() == "master" then
+    if event == "RAID_ROSTER_UPDATE" then
+        MLBC.fillRaidData()
+    elseif event == "OPEN_MASTER_LOOT_LIST" then
+      MLBC.fillRaidData();
+      UIDropDownMenu_Initialize(RaidDropDown, BuildRaidMenu, "MENU");
+      ToggleDropDownMenu(1, nil, RaidDropDown, LootFrame.selectedLootButton, 0, 0)
+    elseif event == "LOOT_SLOT_CLEARED" then
+      CloseDropDownMenus()
     end
   end
 end)
+
+UnitPopupButtons["ITEM_QUALITY1_DESC"] = { text = TEXT(ITEM_QUALITY1_DESC), dist = 0, color = ITEM_QUALITY_COLORS[1] };
+tinsert(UnitPopupMenus["LOOT_THRESHOLD"], 1, "ITEM_QUALITY1_DESC")
+
+local Original_UnitPopup_OnClick = UnitPopup_OnClick
+
+local function Hook_UnitPopup_OnClick()
+  Original_UnitPopup_OnClick()
+  local button = this.value
+  if button == "ITEM_QUALITY1_DESC" or button == "ITEM_QUALITY2_DESC" or button == "ITEM_QUALITY3_DESC" or button == "ITEM_QUALITY4_DESC" then
+		SetLootThreshold(this:GetID())
+		local color = ITEM_QUALITY_COLORS[this:GetID()]
+		UIDropDownMenu_SetButtonText(1, 3, UnitPopupButtons[button].text, color.r, color.g, color.b)
+  end
+end
+
+UnitPopup_OnClick = Hook_UnitPopup_OnClick

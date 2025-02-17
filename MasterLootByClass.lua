@@ -53,7 +53,6 @@ function MLBC.fillRaidData()
   if UnitInParty("player") and not UnitInRaid("player") then
     local _, playerClass = UnitClass("player")
     local playerName = UnitName("player")
-    playerClass = string.lower(playerClass)
     table.insert(MLBC.raid[playerClass], playerName)
     for i = 1, GetNumPartyMembers() do
       if UnitName('party' .. i) then

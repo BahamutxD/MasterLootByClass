@@ -133,17 +133,8 @@ local function BuildRaidMenu()
         info.func = GiveLoot
         info.arg1 = UnitName("player")
         UIDropDownMenu_AddButton(info)
-
-        wipe(info)
-        info.text = "Random"
-        info.disabled = false
-        info.textHeight = 12
-        info.isTitle = false
-        info.notCheckable = true
-        info.func = GiveToRandom
-        UIDropDownMenu_AddButton(info)
 		
-		        wipe(info)
+		wipe(info)
         info.text = "Announce"
         info.disabled = false
         info.textHeight = 12
@@ -154,12 +145,18 @@ local function BuildRaidMenu()
             local link = GetLootSlotLink(item)
             if link then
                 SendChatMessage(link, "RAID_WARNING")
-            else
-                DEFAULT_CHAT_FRAME:AddMessage("|cffcc6666[MasterLootByClass]|r No item selected to announce.")
             end
         end
         UIDropDownMenu_AddButton(info)
 
+        wipe(info)
+        info.text = "Random"
+        info.disabled = false
+        info.textHeight = 12
+        info.isTitle = false
+        info.notCheckable = true
+        info.func = GiveToRandom
+        UIDropDownMenu_AddButton(info)
 
         wipe(info)
         info.text = ""
